@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:berita_flutter/api/Api.dart';
-import 'package:berita_flutter/api/DetailResponse.dart' as prefix0;
 import 'package:berita_flutter/api/ListBeritaResponse.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -18,20 +15,25 @@ class DetailNews extends StatefulWidget {
 }
 
 class _DetailNewsState extends State<DetailNews> {
-  prefix0.Data data;
+  String judul = "",
+      postOn = "",
+      ketNews = "",
+      foto = "https://www.freeiconspng.com/uploads/no-image-icon-15.png";
 
-  _getDetail() {
+  void _getDetail() async {
     Api.getDetailNews(widget.data.id).then((response) {
-      var decode = jsonDecode(response.body);
-      var list = prefix0.DetailResponse.fromJson(decode);
-      data = list.data;
+      setState(() {
+        judul = response.jdl_news;
+        postOn = response.post_on;
+        ketNews = response.ket_news;
+        foto = response.foto_news;
+        print(foto);
+      });
     });
   }
 
   @override
   void initState() {
-    // TODO: implement initState
-    super.initState();
     _getDetail();
   }
 
@@ -43,19 +45,41 @@ class _DetailNewsState extends State<DetailNews> {
       ),
       body: Container(
         padding: EdgeInsets.all(10.0),
-        child: Column(
-          children: <Widget>[
-            Text(data.jdlNews),
-            Image.network(baseUrl + '../news/' + data.fotoNews),
-            Text(
-              data.postOn,
-              style: TextStyle(fontSize: 10),
-            ),
-            Text(
-              data.ketNews,
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Text(
+                judul,
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                postOn,
+                style: TextStyle(fontSize: 12),
+              ),
+              SizedBox(
+                height: 10.0,
+              ),
+              Image.network(
+                foto,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes
+                          : null,
+                    ),
+                  );
+                },
+              ),
+              SizedBox(
+                height: 10.0,
+              ),
+              Text(ketNews)
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:berita_flutter/DetailNews.dart';
 import 'package:berita_flutter/api/Api.dart';
 import 'package:berita_flutter/api/ListBeritaResponse.dart';
@@ -11,6 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Lauwba News',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -33,11 +32,11 @@ class _MyHomePageState extends State<MyHomePage> {
   var listNews = List<ListBeritaResponse>();
   var data = List<Data>();
 
-  _getnews() {
+  void _getnews() async {
     Api.getNews().then((response) {
-      var data = json.decode(response.body);
-      var item = ListBeritaResponse.fromJson(data);
-      this.data = item.data;
+      setState(() {
+        this.data = response.data;
+      });
     });
   }
 
@@ -55,7 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: ListView.builder(
-          itemCount: data.length ?? 0,
+          itemCount: data.length,
           itemBuilder: (BuildContext ctx, int index) {
             return GestureDetector(
               onTap: () {
@@ -72,8 +71,26 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: <Widget>[
                     Container(
                       width: 65.0,
+                      height: 65.0,
                       alignment: Alignment.center,
-                      child: Image.network(data[index].fotoNews),
+                      child: Image.network(
+                        data[index].fotoNews,
+                        fit: BoxFit.cover,
+                        width: 120.0,
+                        height: 65.0,
+                        loadingBuilder: (BuildContext context, Widget child,
+                            ImageChunkEvent loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes
+                                  : null,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     Flexible(
                       flex: 1,
@@ -90,6 +107,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13)),
+                            ),
+                            SizedBox(
+                              height: 10.0,
                             ),
                             Align(
                               alignment: Alignment.centerLeft,
